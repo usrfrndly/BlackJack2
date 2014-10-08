@@ -135,7 +135,7 @@ class ViewController: UIViewController {
                 self.view.addSubview(playerHandLabel)
                 self.view.addSubview(playerHand)
                 self.view.addSubview(playerResult)
-                y += 100
+                y += 80
             }
             dealerLabel = UILabel()
             dealerHand = UITextField()
@@ -173,13 +173,11 @@ class ViewController: UIViewController {
     
     @IBAction func newGame(sender:AnyObject){
         if validate_bets(){
-    
+            blackJack.playAgain()
             placeBetButton.hidden = true
             hitButton.hidden = false
             stayButton.hidden = false
-            blackJack.dealer.clear()
             for (index,player) in enumerate(blackJack.players){
-                player.clear()
                 playerHandLabels[index].hidden = false
                 playerHands[index].hidden = false
                 playerResults[index].hidden = false
@@ -219,31 +217,7 @@ class ViewController: UIViewController {
         stay()
     }
     
-    @IBAction func resetGame(sender: AnyObject) {
-        for (index,player) in enumerate(blackJack.players){
-            playerLabels[index].removeFromSuperview()
-            playerHands[index].removeFromSuperview()
-            playerBets[index].removeFromSuperview()
-            playerBetLabels[index].removeFromSuperview()    
-            playerTotals[index].removeFromSuperview()
-            playerResults[index].removeFromSuperview()
-            playerHandLabels[index].removeFromSuperview()
-        }
-        dealerLabel.removeFromSuperview()
-        dealerHand.removeFromSuperview()
-        
 
-        blackJack = BlackjackModel()
-        playerCountStepper.hidden = false
-        deckCountStepper.hidden = false
-        setPlayersAndDeckButton.hidden = false
-        deckCountTextField.enabled = true
-        playerCountTextField.enabled = true
-        ResetButton.hidden = true
-        placeBetButton.setTitle("Place Bet", forState: UIControlState.Normal)
-        var activePlayerIndex = 0
-    
-    }
     
     
     func gameOver(){
@@ -259,8 +233,32 @@ class ViewController: UIViewController {
             playerBets[index].userInteractionEnabled=true
         }
         
+    }
+    
+    @IBAction func resetGame(sender: AnyObject) {
+         placeBetButton.hidden = true
+        for (index,player) in enumerate(blackJack.players){
+            playerLabels[index].removeFromSuperview()
+            playerHands[index].removeFromSuperview()
+            playerBets[index].removeFromSuperview()
+            playerBetLabels[index].removeFromSuperview()
+            playerTotals[index].removeFromSuperview()
+            playerResults[index].removeFromSuperview()
+            playerHandLabels[index].removeFromSuperview()
+        }
+        dealerLabel.removeFromSuperview()
+        dealerHand.removeFromSuperview()
         
         
+        blackJack = BlackjackModel()
+        playerCountStepper.hidden = false
+        deckCountStepper.hidden = false
+        setPlayersAndDeckButton.hidden = false
+        deckCountTextField.enabled = true
+        playerCountTextField.enabled = true
+        ResetButton.hidden = true
+        placeBetButton.setTitle("Place Bet", forState: UIControlState.Normal)
+        var activePlayerIndex = 0
         
     }
     

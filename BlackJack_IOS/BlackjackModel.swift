@@ -26,7 +26,7 @@ class BlackjackModel{
         self.playerNumber = 2
     }
     
-    func restart(){
+    func playAgain(){
         gameOverMessage = ""
         for player in players{
             player.clear()
