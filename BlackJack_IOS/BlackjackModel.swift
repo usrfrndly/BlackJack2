@@ -33,7 +33,7 @@ class BlackjackModel{
         }
         dealer.clear()
         
-        if gameNumber <= 5{
+        if gameNumber < 5{
             gameNumber++
             
         }else{
