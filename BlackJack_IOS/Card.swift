@@ -41,8 +41,7 @@ class Card:NSObject{
     }
     
     override  var description: String {
-
-        return "\(name)"
+        return name
     }
     
     /**

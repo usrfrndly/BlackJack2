@@ -23,11 +23,16 @@ class Player{
     
     var playerNumber:Int
     
+    //var lost:Bool
+    var gameOverMess:String
+    
     init(number:Int){
         self.playerTotal = 0
         self.funds = 100.00
         self.playerBet=0.0
         self.playerNumber=number
+        //self.lost=false
+        self.gameOverMess=""
     }
     
     /**
@@ -38,10 +43,20 @@ class Player{
         // Determine value of ace
         if(card.isAce()){
             if playerTotal >= 11 {
+                
                 card.makeSmallAce()
             }
             else {
                 card.makeBigAce()
+            }
+        }
+        // If previous ace was set to 11 and should be reset to 1
+        if(card.value + playerTotal > 21 && find(playerHand,Card(cardInitialVal:14)) != nil){
+            var prevAceIndex = find(playerHand,Card(cardInitialVal:14))
+            playerHand[prevAceIndex!].makeSmallAce()
+            playerTotal = 0
+            for c in playerHand{
+                playerTotal += c.value
             }
         }
         playerHand.append(card)
@@ -73,10 +88,14 @@ class Player{
         }
         
     }
+    
+    
     /**
     Resets player hand, card total, and bet for a new round
     */
     func clear(){
+        //lost=false
+        gameOverMess=""
         playerHand=[]
         playerTotal=0
         //playerBet=0

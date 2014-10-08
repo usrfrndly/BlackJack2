@@ -21,41 +21,52 @@ class BlackjackModel{
         self.players = []
         self.decks = Decks()
         self.dealer = Dealer()
-        self.decks.deck = self.decks.shuffleDeck()
         self.gameNumber = 0
         self.gameOverMessage = nil
         self.playerNumber = 2
     }
     
-    func newGame(playerNum:Int=2, deckNum:Int=3) {
-        gameOverMessage = nil
-        playerNumber = playerNum
-        var currentPlayersNum = players.count
-        if playerNumber != currentPlayersNum{
-            if playerNumber < currentPlayersNum{
-                players = Array(players[0...playerNumber])
-            }
-            else{
-                for x in currentPlayersNum ..< playerNumber {
-                    players += [Player(number:x)]
-                }
-            }
-        }
+    func restart(){
+        gameOverMessage = ""
         for player in players{
             player.clear()
         }
         dealer.clear()
-        // TODO: Check gameNumber calculation
+        
         if gameNumber <= 5{
             gameNumber++
             
         }else{
+            self.decks.deck = self.decks.shuffleDeck()
             gameNumber = 0
-            if decks.numberOfDecks != deckNum{
-                self.decks = Decks(numDecks: deckNum)
-            }
-            decks.deck=decks.shuffleDeck()
         }
+    }
+    
+    func newGame(playerNum:Int=2, deckNum:Int=3) {
+        gameOverMessage = ""
+        playerNumber = playerNum
+        var currentPlayersNum = players.count
+        for x in 0..<playerNum{
+            players.append(Player(number:x+1))
+        }
+//        if playerNumber != currentPlayersNum{
+//            if playerNumber < currentPlayersNum{
+//                players = Array(players[0...playerNumber])
+//            }
+//            else{
+//                for x in currentPlayersNum ..< playerNumber {
+//                    players += [Player(number:x)]
+//                }
+//            }
+        //}
+//        for player in players{
+//            player.clear()
+//        }
+//        dealer.clear()
+        // TODO: Check gameNumber calculation
+        self.decks = Decks(numDecks: deckNum)
+
+        self.decks.deck=self.decks.shuffleDeck()
         
     }
 
@@ -73,7 +84,7 @@ class BlackjackModel{
                 // Place card at the end of the deck
                 decks.deck.append(card)
             }
-            // Add next card to dealer's handƒ
+            // Add next card to dealer's hand
             card = decks.deck.removeAtIndex(0)
             dealer.addCard(card)
             decks.deck.append(card)
@@ -100,7 +111,8 @@ class BlackjackModel{
     }
 
     func push(player:Player){
-        gameOverMessage = "Shucks - it's a tie for Player \(player.playerNumber)  Wanna play again? Click the New Game button and place a bet."
+        //player.gameOverMess = "Shucks - it's a tie for Player \(player.playerNumber) ."
+        player.gameOverMess = "TIE"
     }
     
     /**
@@ -109,7 +121,8 @@ class BlackjackModel{
     */
     func playerBj(player:Player){
         player.funds += player.playerBet*1.5
-        gameOverMessage = "Player \(player.playerNumber) got BLACKJACK, YEERHAW! Wanna play again? Click the New Game button and place a bet."
+        player.gameOverMess="BLACKJACK."
+        //gameOverMessage = "Player \(player.playerNumber) got BLACKJACK, YEERHAW! Wanna play again? Click the New Game button and place a bet."
     }
     
     /**
@@ -117,7 +130,8 @@ class BlackjackModel{
     */
     func playerWin(player:Player){
         player.funds += player.playerBet
-        gameOverMessage = "Player \(player.playerNumber) beat the dealer! Ride em cowgirl. Wanna play again? Click the New Game button and place a bet."
+        player.gameOverMess="WON."
+        //gameOverMessage = "Player \(player.playerNumber) beat the dealer! Ride em cowgirl. Wanna play again? Click the New Game button and place a bet."
         
     }
     /**
@@ -126,7 +140,7 @@ class BlackjackModel{
     */
     func playerLose(player:Player){
         player.funds-=player.playerBet
-        gameOverMessage="I don't know how to tell you this... but Player \(player.playerNumber) lost </3. Wanna give it another go? Click the New Game button and place a bet."
+        player.gameOverMess="LOST."
     }
     
     /**
@@ -145,6 +159,7 @@ class BlackjackModel{
 //            dealerTurn()
 //        }
     }
+    
     /**
     Dealer continues to hit as long as card total is less than 17
     */
@@ -157,17 +172,21 @@ class BlackjackModel{
             decks.deck.append(card)
         }
         for player in players{
-            if dealer.dealerTotal > 21 && player.playerTotal<21{ // Dealer busts, player wins
-                playerWin(player)
-            }
-            else if dealer.dealerTotal == player.playerTotal{ // Tie
-                push(player)
-            }
-            else if dealer.dealerTotal > player.playerTotal{ // Whoever has the greatest total under 21 wins
-                playerLose(player)
-            }
-            else if dealer.dealerTotal < player.playerTotal{
-                playerWin(player)
+            // Check if player has already gotten blackjack or busted
+            if player.gameOverMess.isEmpty{
+                if dealer.dealerTotal > 21 && player.playerTotal<=21{ // Dealer busts, player wins
+                    playerWin(player)
+                }
+                else if dealer.dealerTotal == player.playerTotal{ // Tie
+                    push(player)
+                }
+                else if dealer.dealerTotal > player.playerTotal{ // Whoever has the greatest total under 21 wins
+                    playerLose(player)
+                }
+                else if dealer.dealerTotal < player.playerTotal{
+                    playerWin(player)
+                }
+            
             }
         }
     }

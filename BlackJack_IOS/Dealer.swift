@@ -74,11 +74,11 @@ class Dealer{
             return false
         }
     }
+    
     func revealHoleCard() -> Card?{
         if holeCard != nil{
             calculateHoleCard()
             dealerTotal+=holeCard!.value
-        
             return holeCard!
         }else{
             return holeCard
@@ -94,6 +94,7 @@ class Dealer{
     }
     
     func clear(){
+        holeCard = nil
         dealerHand=[]
         dealerTotal=0
     }

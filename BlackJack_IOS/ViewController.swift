@@ -9,44 +9,24 @@
 import UIKit
 
 class ViewController: UIViewController {
-    
-    
     var blackJack = BlackjackModel()
     
+    var playerLabels:[UILabel] = []
+    var playerBetLabels:[UILabel] = []
+    var playerBets:[UITextField] = []
+    var playerHandLabels:[UILabel] = []
+    var playerHands:[UITextField] = []
+    var playerTotals:[UITextField] = []
+    var playerResults:[UILabel] = []
+    var dealerLabel:UILabel!
+    var dealerHand:UITextField!
+    var activePlayerIndex = 0
     
-    func refreshUI(){
-        
-        //fundsTextField.text = String(format:"%0.2f", blackJack.player.funds)
-        //betTextField.text = String(format:"%0.2f", blackJack.player.playerBet)
-        //playerHandTextView.text=String(blackJack.player.playerHand.description)
-        //dealerScore.text = String(blackJack.dealer.dealerTotal)
-        //playerScore.text = String(blackJack.player.playerTotal)
-        var dHand:[Card]=blackJack.dealer.dealerHand
-        var dealer_Card_names:String=""
-        if !dHand.isEmpty && dHand.count <= 2 && blackJack.gameOverMessage == nil{
-            dealer_Card_names = "[" + "HoleCard"
-            for i in 1..<dHand.count{
-                dealer_Card_names += ", " + dHand[i].name
-            }
-            dealer_Card_names += "]"
-            dealerHandTextView.text = dealer_Card_names
-        }
-        if blackJack.gameOverMessage != nil {
-            gameOver()
-        }
-    }
-    
-    //@IBOutlet var fundsTextField: UITextField!
-    //@IBOutlet var betTextField: UITextField!
-    @IBOutlet var dealerScore: UITextField!
-    //@IBOutlet var playerScore: UITextField!
-    @IBOutlet weak var dealerHandLabel: UILabel!
-    //@IBOutlet weak var playerHandLabel: UILabel!
-    //@IBOutlet var playerHandTextView : UITextView!
-    @IBOutlet var dealerHandTextView : UITextView!
+    @IBOutlet weak var placeBetButton: UIButton!
+    @IBOutlet weak var ResetButton: UIButton!
+    @IBOutlet weak var stayButton: UIButton!
+    @IBOutlet weak var hitButton: UIButton!
     @IBOutlet var gameOverField : UITextView!
-    @IBOutlet var hitButton : UIButton!
-    @IBOutlet var stayButton : UIButton!
     @IBOutlet var deckCountTextField: UITextField!
     @IBOutlet weak var deckCountStepper: UIStepper!
     @IBOutlet weak var playerCountTextField: UITextField!
@@ -60,15 +40,25 @@ class ViewController: UIViewController {
         deckCountTextField.text = String(Int(sender.value))
     }
     
-    var playerLabels:[UILabel] = []
-    var playerBets:[UITextField] = []
-    var playerHands:[UITextView] = []
-    var playerTotals:[UITextField] = []
-    
-    
+    func refreshUI(){
+        for(index,player) in enumerate(blackJack.players){
+            playerTotals[index].text = String(player.funds.description)
+            playerHands[index].text = String(player.playerHand.description)
+            playerResults[index].text = String(player.gameOverMess)
+        }
+        if blackJack.dealer.dealerHand.count == 2 && activePlayerIndex < blackJack.players.count{
+            dealerHand.text = "[HoleCard, \(blackJack.dealer.dealerHand[1].description) ]"
+        }
+        else{
+            dealerHand.text = blackJack.dealer.dealerHand.description
+        }
+        if activePlayerIndex < blackJack.players.count && !blackJack.players[activePlayerIndex].gameOverMess.isEmpty{
+            stay()
+        }
+        
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
-        //fundsTextField.text = String(format:"%0.2f", blackJack.player.funds)
         
     }
     
@@ -76,120 +66,203 @@ class ViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
-    @IBAction func newGame(sender:AnyObject){
-        if validate_bets(){
-            dealerHandTextView.hidden = false
-            for hand in playerHands{
-                hand.hidden = false
-            }
-            
-                //gameOverField.text = ""
-            //errorMessageField.text = ""
-            refreshUI()
-            blackJack.deal()
-        }
-        //refreshUI()
-    }
+    
     
     @IBAction func setPlayerNumAndDeckNum(sender:AnyObject){
         var playerNum = playerCountTextField.text.toInt()!
         var deckCount = deckCountTextField.text.toInt()!
+        playerLabels = []
+        playerBets = []
+        playerBetLabels = []
+        playerHandLabels = []
+        playerHands = []
+        playerTotals  = []
+        playerResults = []
+        var y = CGFloat(150)
         if playerNum < 1{
             gameOverField.text = "You must have at least one player"
         }else if deckCount < 1{
             gameOverField.text = "You must select at least one deck"
         }
         else{
+            playerCountStepper.hidden = true
+            deckCountStepper.hidden = true
             setPlayersAndDeckButton.hidden = true
+            deckCountTextField.enabled = false
+            playerCountTextField.enabled = false
             blackJack.newGame(playerNum: playerCountTextField.text.toInt()! , deckNum: deckCountTextField.text.toInt()!)
-            var y = CGFloat(150)
             for x in 1...playerNum{
                 var playerLab: UILabel = UILabel()
-                playerLab.frame = CGRectMake(0, y, 100,30)
+                playerLab.frame = CGRectMake(0, y, 80,30)
                 playerLab.text = "Player \(x)"
                 playerLabels.append(playerLab)
                 var totalTxtField: UITextField = UITextField()
-                totalTxtField.frame = CGRectMake(50, y, 100, 30)
-                totalTxtField.text = String(blackJack.players[x-1].playerTotal)
+                totalTxtField.frame = CGRectMake(80, y, 100, 30)
+                var funds = blackJack.players[x-1].funds
+                totalTxtField.text = NSString(format:"%.2f",funds)
                 totalTxtField.userInteractionEnabled = false
                 playerTotals.append(totalTxtField)
+                var betTxtLabel:UILabel = UILabel()
+                betTxtLabel.frame = CGRectMake(180, y, 50, 30)
+                betTxtLabel.text = "Bet:"
+                playerBetLabels.append(betTxtLabel)
                 var betTxtField: UITextField = UITextField()
-                betTxtField.frame = CGRectMake(150, y, 100, 30)
+                betTxtField.frame = CGRectMake(230, y, 80, 30)
+                betTxtField.borderStyle = UITextBorderStyle.Line
+                betTxtField.text = NSString(format:"%.2f",1.0)
                 playerBets.append(betTxtField)
-                var playerHand: UITextView = UITextView()
-                playerHand.frame = CGRectMake(150, y+100, 100, 30)
+                var playerHandLabel:UILabel = UILabel()
+                playerHandLabel.frame = CGRectMake(0,y+50,50,30)
+                playerHandLabel.text = "Hand:"
+                playerHandLabel.hidden = true
+                playerHandLabels.append(playerHandLabel)
+                var playerHand: UITextField = UITextField()
+                playerHand.frame = CGRectMake(50, y+50, 300, 30)
+                playerHand.borderStyle = UITextBorderStyle.Line
                 playerHand.hidden = true
+                playerHand.userInteractionEnabled = false
                 playerHands.append(playerHand)
+                var playerResult:UILabel = UILabel()
+                playerResult.frame = CGRectMake(150,y+50,150,30)
+                playerResult.hidden = true
+                playerResult.userInteractionEnabled = false
+                playerResult.textColor = UIColor( red: 1.0, green: 0.0, blue:0.0, alpha: 1.0 )
+                playerResults.append(playerResult)
                 self.view.addSubview(playerLab)
                 self.view.addSubview(totalTxtField)
+                self.view.addSubview(betTxtLabel)
                 self.view.addSubview(betTxtField)
+                self.view.addSubview(playerHandLabel)
                 self.view.addSubview(playerHand)
+                self.view.addSubview(playerResult)
                 y += 100
             }
-            
-            deckCountTextField.enabled = false
-            deckCountStepper.hidden = true
-            playerCountTextField.enabled = false
-            playerCountStepper.hidden = true
+            dealerLabel = UILabel()
+            dealerHand = UITextField()
+            dealerLabel.frame = CGRectMake(0, y, 80,30)
+            dealerLabel.text = "Dealer:"
+            dealerLabel.hidden = true
+            dealerHand.frame = CGRectMake(100,y,200,30)
+            dealerHand.borderStyle =  UITextBorderStyle.Line
+            dealerHand.hidden = true
+            dealerHand.userInteractionEnabled = false
+            self.view.addSubview(dealerLabel)
+            self.view.addSubview(dealerHand)
+            placeBetButton.hidden = false
+
         }
         
     }
+
     
     func validate_bets() -> Bool{
         for (index,betTextField) in enumerate(playerBets){
             var betAmount = NSString(string: betTextField.text).doubleValue
-
-        // If bet > 1  and less than playerTotal, sets player bet
+            
+            // If bet > 1  and less than playerTotal, sets player bet
             if !blackJack.players[index].bet(betAmount){
                 gameOverField.text = "Your bet must be at least $1 and not exceed your funds"
                 return false
             }
+            else{
+                betTextField.userInteractionEnabled = false
+            }
         }
         return true
     }
-
-
-//    @IBAction func hit(sender:AnyObject){
-//        blackJack.playerHit()
-//        refreshUI()
-//    }
-    @IBAction func stay(sender:AnyObject){
-        blackJack.dealerTurn()
+    
+    @IBAction func newGame(sender:AnyObject){
+        if validate_bets(){
+    
+            placeBetButton.hidden = true
+            hitButton.hidden = false
+            stayButton.hidden = false
+            blackJack.dealer.clear()
+            for (index,player) in enumerate(blackJack.players){
+                player.clear()
+                playerHandLabels[index].hidden = false
+                playerHands[index].hidden = false
+                playerResults[index].hidden = false
+            }
+            dealerLabel.hidden = false
+            dealerHand.hidden = false
+            activePlayerIndex = 0
+            playerLabels[activePlayerIndex].backgroundColor = UIColor( red: 0.0, green: 0.0, blue:1.0, alpha: 1.0 )
+            blackJack.deal()
+            gameOverField.text = ""
+        }
         refreshUI()
     }
+    
+    
+    
+    @IBAction func hit(sender:AnyObject){
+        if activePlayerIndex < blackJack.players.count{
+            blackJack.playerHit(blackJack.players[activePlayerIndex])
+        }
+        refreshUI()
+    }
+    
+    func stay(){
+        playerLabels[activePlayerIndex].backgroundColor = UIColor( red: 1.0, green: 1.0, blue:1.0, alpha: 1.0)
+        activePlayerIndex++
+        if activePlayerIndex >= blackJack.players.count{
+            blackJack.dealerTurn()
+            refreshUI()
+            gameOver()
+        }else{
+            refreshUI()
+            playerLabels[activePlayerIndex].backgroundColor = UIColor( red: 0.0, green: 0.0, blue:1.0, alpha: 1.0 )
+        }
+    }
+    @IBAction func stay(sender:AnyObject){
+        stay()
+    }
+    
+    @IBAction func resetGame(sender: AnyObject) {
+        for (index,player) in enumerate(blackJack.players){
+            playerLabels[index].removeFromSuperview()
+            playerHands[index].removeFromSuperview()
+            playerBets[index].removeFromSuperview()
+            playerBetLabels[index].removeFromSuperview()    
+            playerTotals[index].removeFromSuperview()
+            playerResults[index].removeFromSuperview()
+            playerHandLabels[index].removeFromSuperview()
+        }
+        dealerLabel.removeFromSuperview()
+        dealerHand.removeFromSuperview()
+        
+
+        blackJack = BlackjackModel()
+        playerCountStepper.hidden = false
+        deckCountStepper.hidden = false
+        setPlayersAndDeckButton.hidden = false
+        deckCountTextField.enabled = true
+        playerCountTextField.enabled = true
+        ResetButton.hidden = true
+        placeBetButton.setTitle("Place Bet", forState: UIControlState.Normal)
+        var activePlayerIndex = 0
+    
+    }
+    
+    
     func gameOver(){
+        activePlayerIndex=0
+        dealerHand.text = String(blackJack.dealer.dealerHand.description)
+        gameOverField.text = blackJack.gameOverMessage
+        placeBetButton.setTitle("Play Again", forState: UIControlState.Normal)
         hitButton.hidden = true
         stayButton.hidden = true
-        dealerHandTextView.text = String(blackJack.dealer.dealerHand.description)
-        gameOverField.text = blackJack.gameOverMessage
-        dealerHandTextView.text = String(blackJack.dealer.dealerHand.description)
-        //playerScore.text = String(blackJack.player.playerTotal)
-        dealerScore.text = String(blackJack.dealer.calculateTotal())
-       
-        //        var alert = UIAlertController(title: "Game Over?", message: blackJack.gameOverMessage, preferredStyle: UIAlertControllerStyle.Alert)
-        //        alert.addAction(UIAlertAction(title: "I Quit.", style: UIAlertActionStyle.Default, handler: nil))
-        //        alert.addAction(UIAlertAction(title: "Play Again", style: UIAlertActionStyle.Default){
-        //                action in
-        //            var betAmount = alert.textFields![0] as UITextField
-        //            var playersNum = alert.textFields![1] as UITextField
-        //            var deckNum = alert.textFields![2] as UITextField
-        //            alert.addAction(UIAlertAction(title:"Start",style:UIAlertActionStyle.Default){
-        //                action  in
-        //                if self.bet(alert) && Int(deckNum.text) >= 1 && Int(playersNum.text) >= 1{
-        //                    self.newGame(sender: alert)
-        //                }
-        //
-        //        alert.textFields[0] = String(1)
-        //        alert.textFields[1] = String(3)
-        //                }
-        //            }
-        //    
+        placeBetButton.hidden = false
+        ResetButton.hidden = false
+        for (index,player) in enumerate(blackJack.players){
+            playerBets[index].userInteractionEnabled=true
+        }
         
-        //self.presentViewController(alert, animated: true, completion: nil)
+        
+        
         
     }
     
     
 }
-
